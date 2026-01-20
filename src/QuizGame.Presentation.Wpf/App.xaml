@@ -1,0 +1,12 @@
+﻿<Application x:Class="QuizGame.Presentation.Wpf.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:QuizGame.Presentation.Wpf"
+             xmlns:converters="clr-namespace:QuizGame.Presentation.Wpf.Converters"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <converters:NullToOpacityConverter x:Key="NullToOpacityConverter"/>
+        <converters:NullToInverseOpacityConverter x:Key="NullToInverseOpacityConverter"/>
+        <converters:LogTypeToColorConverter x:Key="LogTypeToColorConverter"/>
+    </Application.Resources>
+</Application>

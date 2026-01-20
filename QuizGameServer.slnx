@@ -1,1 +1,8 @@
-<Solution />
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/QuizGame.Application/QuizGame.Application.csproj" />
+    <Project Path="src/QuizGame.Domain/QuizGame.Domain.csproj" />
+    <Project Path="src/QuizGame.Infrastructure/QuizGame.Infrastructure.csproj" />
+    <Project Path="src/QuizGame.Presentation.Wpf/QuizGame.Presentation.Wpf.csproj" />
+  </Folder>
+</Solution>
