@@ -86,11 +86,31 @@ public class BuzzerManager : IDisposable
     }
 
     /// <summary>
-    /// Envoie un message à un buzzer
+    /// Envoie une commande à un buzzer
     /// </summary>
-    public async Task<bool> SendMessageAsync(string buzzerId, string message)
+    public async Task<bool> SendMessageAsync(string buzzerId, string action)
     {
-        return await _communicationService.SendMessageAsync(buzzerId, message);
+        lock (_buzzersLock)
+        {
+            if (!_buzzers.TryGetValue(buzzerId, out var buzzer))
+                return false;
+
+            return Task.Run(async () => await _communicationService.SendMessageAsync(buzzer, action)).Result;
+        }
+    }
+
+    /// <summary>
+    /// Définit le nom d'un buzzer
+    /// </summary>
+    public async Task<bool> SetBuzzerNameAsync(string buzzerId, string newName)
+    {
+        lock (_buzzersLock)
+        {
+            if (!_buzzers.TryGetValue(buzzerId, out var buzzer))
+                return false;
+
+            return Task.Run(async () => await _communicationService.SetBuzzerNameAsync(buzzer, newName)).Result;
+        }
     }
 
     /// <summary>

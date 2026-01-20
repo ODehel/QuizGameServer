@@ -58,9 +58,12 @@ public class BuzzerViewModel : INotifyPropertyChanged
                 _selectedBuzzer = value;
                 OnPropertyChanged(nameof(SelectedBuzzer));
                 OnPropertyChanged(nameof(IsConnectButtonEnabled));
+                OnPropertyChanged(nameof(IsSelectedBuzzerConnected));
             }
         }
     }
+
+    public bool IsSelectedBuzzerConnected => SelectedBuzzer?.Status == BuzzerStatus.Connected;
 
     public string ScanButtonText => IsScanning ? "Arrêter le scan..." : "Scan réseau";
     public bool IsConnectButtonEnabled => SelectedBuzzer != null && SelectedBuzzer.Status == BuzzerStatus.Disconnected;
@@ -69,6 +72,8 @@ public class BuzzerViewModel : INotifyPropertyChanged
     public ICommand ConnectCommand { get; }
     public ICommand DisconnectCommand { get; }
     public ICommand ClearLogsCommand { get; }
+    public ICommand TestBuzzersCommand { get; }
+    public ICommand RenameBuzzerCommand { get; }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -82,6 +87,8 @@ public class BuzzerViewModel : INotifyPropertyChanged
         ConnectCommand = new RelayCommand(_ => ConnectAsync(), _ => IsConnectButtonEnabled);
         DisconnectCommand = new RelayCommand(_ => DisconnectAsync(), _ => SelectedBuzzer?.Status == BuzzerStatus.Connected);
         ClearLogsCommand = new RelayCommand(_ => EventLogs.Clear());
+        TestBuzzersCommand = new RelayCommand(_ => OpenTestBuzzersWindow(), _ => true);
+        RenameBuzzerCommand = new RelayCommand(_ => RenameBuzzerAsync(), _ => SelectedBuzzer != null && IsSelectedBuzzerConnected);
     }
 
     public void Initialize(BuzzerManager buzzerManager)
@@ -174,6 +181,51 @@ public class BuzzerViewModel : INotifyPropertyChanged
         {
             StatusMessage = $"Erreur de déconnexion : {ex.Message}";
             AddLog($"Erreur de déconnexion : {ex.Message}", LogType.Error);
+        }
+    }
+
+    private void OpenTestBuzzersWindow()
+    {
+        if (_buzzerManager == null)
+            return;
+
+        var testWindow = new TestBuzzersWindow();
+        var testViewModel = new TestBuzzersViewModel();
+        testViewModel.Initialize(_buzzerManager);
+        testWindow.DataContext = testViewModel;
+        testWindow.Owner = System.Windows.Application.Current.MainWindow;
+        testWindow.Show();
+    }
+
+    private async void RenameBuzzerAsync()
+    {
+        if (_buzzerManager == null || SelectedBuzzer == null)
+            return;
+
+        var newName = SelectedBuzzer.Name;
+        if (string.IsNullOrWhiteSpace(newName))
+            return;
+
+        try
+        {
+            StatusMessage = $"Renommage en cours...";
+            var result = await _buzzerManager.SetBuzzerNameAsync(SelectedBuzzer.Id, newName);
+
+            if (result)
+            {
+                StatusMessage = $"? Buzzer renommé en '{newName}'";
+                AddLog($"Buzzer renommé en '{newName}'", LogType.Success);
+            }
+            else
+            {
+                StatusMessage = $"? Erreur lors du renommage";
+                AddLog($"Erreur: impossible de renommer le buzzer", LogType.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Erreur : {ex.Message}";
+            AddLog($"Erreur de renommage : {ex.Message}", LogType.Error);
         }
     }
 

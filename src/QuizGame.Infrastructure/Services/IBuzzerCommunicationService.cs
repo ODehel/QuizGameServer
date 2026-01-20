@@ -20,9 +20,14 @@ public interface IBuzzerCommunicationService : IDisposable
     Task DisconnectAsync(string buzzerId);
 
     /// <summary>
-    /// Envoie un message à un buzzer
+    /// Envoie une commande à un buzzer
     /// </summary>
-    Task<bool> SendMessageAsync(string buzzerId, string message);
+    Task<bool> SendMessageAsync(Buzzer buzzer, string action);
+
+    /// <summary>
+    /// Définit le nom d'un buzzer
+    /// </summary>
+    Task<bool> SetBuzzerNameAsync(Buzzer buzzer, string newName);
 
     /// <summary>
     /// Événement déclenché quand un message est reçu d'un buzzer

@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:QuizGame.Presentation.Wpf"
+        xmlns:behaviors="clr-namespace:QuizGame.Presentation.Wpf.Behaviors"
         xmlns:converters="clr-namespace:QuizGame.Presentation.Wpf.Converters"
         mc:Ignorable="d"
         Title="QuizGame - Gestionnaire de Buzzers" Height="700" Width="1000"
@@ -69,7 +70,13 @@
                                             </Grid.ColumnDefinitions>
 
                                             <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="#2C3E50"/>
+                                                <TextBox Text="{Binding Name, UpdateSourceTrigger=LostFocus}"
+                                                         Background="{Binding Status, Converter={StaticResource BuzzerStatusToColorConverter}}"
+                                                         Foreground="#2C3E50"
+                                                         Padding="5" FontSize="12" FontWeight="Bold"
+                                                         Height="30" Margin="0,0,0,5"
+                                                         IsEnabled="{Binding Status, Converter={StaticResource IsConnectedConverter}}"
+                                                         behaviors:TextBoxLostFocusBehavior.LostFocusCommand="{Binding DataContext.RenameBuzzerCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"/>
                                                 <TextBlock Text="{Binding IpAddress}" FontSize="11" Foreground="#7F8C8D"/>
                                                 <TextBlock Text="{Binding MacAddress}" FontSize="10" Foreground="#BDC3C7"/>
                                             </StackPanel>
@@ -143,6 +150,18 @@
                                 <TextBlock Text="{Binding SelectedBuzzer.Status}" Foreground="#7F8C8D"/>
                             </StackPanel>
 
+                            <!-- Rename Section - Only visible when connected -->
+                            <StackPanel Margin="0,0,0,15" Visibility="{Binding IsSelectedBuzzerConnected, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <TextBlock Text="Nom du buzzer:" FontWeight="Bold" Foreground="#2C3E50" Margin="0,0,0,5"/>
+                                <TextBox Text="{Binding SelectedBuzzer.Name, UpdateSourceTrigger=LostFocus}"
+                                         Background="White" Foreground="#2C3E50"
+                                         Padding="8" FontSize="12"
+                                         VerticalContentAlignment="Center"
+                                         Height="32"
+                                         behaviors:TextBoxLostFocusBehavior.LostFocusCommand="{Binding RenameBuzzerCommand}"/>
+                                <TextBlock Text="(Editable uniquement si connecte)" FontSize="10" Foreground="#95A5A6" Margin="0,3,0,0"/>
+                            </StackPanel>
+
                             <!-- Action Buttons -->
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -164,6 +183,12 @@
                                         Padding="15,8" FontSize="12" FontWeight="Bold"
                                         Cursor="Hand"/>
                             </Grid>
+
+                            <Button Command="{Binding TestBuzzersCommand}"
+                                    Content="Tester les Buzzers"
+                                    Background="#9B59B6" Foreground="White"
+                                    Padding="15,8" FontSize="12" FontWeight="Bold"
+                                    Cursor="Hand" Margin="0,10,0,0"/>
                         </StackPanel>
 
                         <TextBlock Text="Sélectionnez un buzzer pour voir les détails" 

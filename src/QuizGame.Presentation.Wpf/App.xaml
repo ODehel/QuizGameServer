@@ -8,5 +8,8 @@
         <converters:NullToOpacityConverter x:Key="NullToOpacityConverter"/>
         <converters:NullToInverseOpacityConverter x:Key="NullToInverseOpacityConverter"/>
         <converters:LogTypeToColorConverter x:Key="LogTypeToColorConverter"/>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <converters:BuzzerStatusToColorConverter x:Key="BuzzerStatusToColorConverter"/>
+        <converters:IsConnectedConverter x:Key="IsConnectedConverter"/>
     </Application.Resources>
 </Application>

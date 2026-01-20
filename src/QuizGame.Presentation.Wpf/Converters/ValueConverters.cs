@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Windows.Data;
 using System.Windows.Media;
+using QuizGame.Domain.Entities;
 
 namespace QuizGame.Presentation.Wpf.Converters;
 
@@ -22,6 +23,59 @@ public class NullToInverseOpacityConverter : IValueConverter
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         return value != null ? 0.0 : 1.0;
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class BoolToVisibilityConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is bool boolValue)
+        {
+            return boolValue ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+        }
+        return System.Windows.Visibility.Collapsed;
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class BuzzerStatusToColorConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is BuzzerStatus status)
+        {
+            return status == BuzzerStatus.Connected ? 
+                new SolidColorBrush(Color.FromRgb(209, 250, 229)) :  // #D1FAE5 - Vert clair
+                new SolidColorBrush(Color.FromRgb(243, 244, 246));   // #F3F4F6 - Gris clair
+        }
+        return new SolidColorBrush(Color.FromRgb(243, 244, 246));
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class IsConnectedConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is BuzzerStatus status)
+        {
+            return status == BuzzerStatus.Connected;
+        }
+        return false;
     }
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

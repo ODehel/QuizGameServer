@@ -80,11 +80,115 @@ public class BuzzerCommunicationService : IBuzzerCommunicationService, IDisposab
         OnStatusChanged(buzzerId, BuzzerStatus.Connected, BuzzerStatus.Disconnected);
     }
 
-    public async Task<bool> SendMessageAsync(string buzzerId, string message)
+    public async Task<bool> SendMessageAsync(Buzzer buzzer, string action)
     {
-        // À implémenter selon votre protocole HTTP
-        // Exemple : POST /message avec le contenu du message
-        return false;
+        try
+        {
+            if (!_buzzerStatuses.TryGetValue(buzzer.Id, out var status) || status != BuzzerStatus.Connected)
+            {
+                return false;
+            }
+
+            var messageUrl = $"http://{buzzer.IpAddress}/message";
+            var payload = new BuzzerCommandRequest
+            {
+                Type = "command",
+                Action = action
+            };
+
+            var json = JsonSerializer.Serialize(payload);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync(messageUrl, content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var commandResponse = JsonSerializer.Deserialize<BuzzerCommandResponse>(responseContent);
+
+                if (commandResponse?.Status == "received")
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Buzzer {buzzer.Name}] Commande confirmée: {action}");
+                    return true;
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Buzzer {buzzer.Name}] Réponse invalide: {responseContent}");
+                    return false;
+                }
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[Buzzer {buzzer.Name}] Échec de l'envoi de la commande. Status: {response.StatusCode}");
+                return false;
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Buzzer {buzzer.Name}] Erreur HTTP lors de l'envoi de commande: {ex.Message}");
+            return false;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Buzzer {buzzer.Name}] Erreur lors de l'envoi du message: {ex.GetType().Name} - {ex.Message}");
+            return false;
+        }
+    }
+
+    public async Task<bool> SetBuzzerNameAsync(Buzzer buzzer, string newName)
+    {
+        try
+        {
+            if (!_buzzerStatuses.TryGetValue(buzzer.Id, out var status) || status != BuzzerStatus.Connected)
+            {
+                return false;
+            }
+
+            var setNameUrl = $"http://{buzzer.IpAddress}/set-name";
+            var payload = new SetNameRequest
+            {
+                Name = newName
+            };
+
+            var json = JsonSerializer.Serialize(payload);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync(setNameUrl, content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var setNameResponse = JsonSerializer.Deserialize<SetNameResponse>(responseContent);
+
+                if (setNameResponse?.Status == "ok")
+                {
+                    // Mettre à jour le nom du buzzer localement
+                    buzzer.Name = newName;
+                    System.Diagnostics.Debug.WriteLine($"[Buzzer] Nom mis à jour: {buzzer.MacAddress} -> {newName}");
+                    return true;
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Buzzer {buzzer.Name}] Réponse invalide: {responseContent}");
+                    return false;
+                }
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[Buzzer {buzzer.Name}] Échec de la définition du nom. Status: {response.StatusCode}");
+                return false;
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Buzzer {buzzer.Name}] Erreur HTTP lors de la définition du nom: {ex.Message}");
+            return false;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Buzzer {buzzer.Name}] Erreur lors de la définition du nom: {ex.GetType().Name} - {ex.Message}");
+            return false;
+        }
     }
 
     private async Task MonitorBuzzerAsync(Buzzer buzzer)
@@ -186,5 +290,32 @@ public class BuzzerCommunicationService : IBuzzerCommunicationService, IDisposab
 
         [System.Text.Json.Serialization.JsonPropertyName("mac")]
         public string? Mac { get; set; }
+    }
+
+    private class BuzzerCommandRequest
+    {
+        [System.Text.Json.Serialization.JsonPropertyName("type")]
+        public string Type { get; set; } = null!;
+
+        [System.Text.Json.Serialization.JsonPropertyName("action")]
+        public string Action { get; set; } = null!;
+    }
+
+    private class BuzzerCommandResponse
+    {
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        public string? Status { get; set; }
+    }
+
+    private class SetNameRequest
+    {
+        [System.Text.Json.Serialization.JsonPropertyName("name")]
+        public string Name { get; set; } = null!;
+    }
+
+    private class SetNameResponse
+    {
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        public string? Status { get; set; }
     }
 }
